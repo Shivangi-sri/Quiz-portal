@@ -1,26 +1,57 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { Suspense, lazy } from 'react';
+import { Switch,  BrowserRouter, Route } from "react-router-dom";
+import { QuizContext } from "./context/quizContext";
 import './App.css';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+const Quiz = lazy(
+  () =>
+    new Promise((resolve, reject) => {
+      import('./views/Quiz')
+        .then(result => resolve(result.default ? result : { default: result }))
+        .catch(reject);
+    })
+);
+
+const QuizDetail = lazy(
+  () =>
+    new Promise((resolve, reject) => {
+      import('./components/QuizDetail')
+        .then(result => resolve(result.default ? result : { default: result }))
+        .catch(reject);
+    })
+);
+
+class App extends React.PureComponent {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      quizData: [],
+    }
+  }
+
+  updateQuizData = data => {
+    // return new Promise(resolve => {
+      // const newData = Object.assign({}, this.state.quizData, data);
+      this.setState({ quizData: data });
+    // });
+  }
+
+  render() {
+    return (
+      <QuizContext.Provider value={{ quizData: this.state.quizData, updateQuizData: this.updateQuizData}}>
+        <BrowserRouter>
+            <Switch>
+              <Suspense fallback={<React.Fragment></React.Fragment>}>
+                <Route exact path="/"  component={Quiz}/>
+                <Route path="/quiz/:id?"  component={QuizDetail}/>
+              </Suspense>
+            </Switch>
+        </BrowserRouter>
+      </QuizContext.Provider>
+    );
+
+  }
 }
 
 export default App;
